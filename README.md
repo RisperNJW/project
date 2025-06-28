@@ -126,13 +126,13 @@ pnpm run build
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/your-username/kenya-tourism-platform.git
-cd kenya-tourism-platform
+git clone https://github.com/RisperNJW/project.git
+cd project
 ```
 
 2. **Install dependencies**
 ```bash
-npm install
+pnpm install
 ```
 
 3. **Environment Setup**
@@ -143,7 +143,7 @@ cp .env.example .env
 
 4. **Start the application**
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 The application will be available at:
@@ -294,7 +294,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-For support, email support@kenyatourism.com or join our Slack channel.
+For support, email Go2Bookings.com or join our Slack channel.
 
 ---
 
