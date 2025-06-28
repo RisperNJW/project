@@ -1,0 +1,26 @@
+{
+  "name": "go2bookings-platform",
+  "version": "1.0.0",
+  "description": "Complete tourism platform for Go2Bookings",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"pnpm run server:dev\" \"pnpm run frontend:dev\"",
+    "frontend:dev": "cd frontend && pnpm run dev",
+    "server:dev": "cd server && pnpm run dev",
+    "frontend:build": "cd frontend && pnpm run build",
+    "server:build": "cd server && pnpm run build",
+    "build": "pnpm run frontend:build && pnpm run server:build",
+    "start": "cd server && pnpm start",
+    "test": "concurrently \"cd frontend && pnpm test\" \"cd server && pnpm test\"",
+    "docker:build": "docker build -t go2bookings .",
+    "docker:run": "docker run -p 3000:3000 -p 5000:5000 go2bookings",
+    "setup": "pnpm install && cd frontend && pnpm install && cd ../server && pnpm install"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  },
+  "workspaces": [
+    "frontend",
+    "server"
+  ]
+}
