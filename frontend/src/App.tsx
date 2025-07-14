@@ -13,9 +13,11 @@ import ChatBot from './components/chat/ChatBot';
 // Pages
 import Home from './pages/Home';
 import Services from './pages/Services';
-import ServiceDetail from './pages/ServiceDetail';
 import Booking from './pages/Booking';
 import Explore from './pages/Explore'
+import Stays from './pages/Stays';
+import Meals from './pages/Meals';  
+import Transport from './pages/Transport';
 import Payment from './pages/Payment';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
@@ -47,9 +49,11 @@ function App() {
                   {/* Public Routes */}
                   <Route path="/" element={<Home />} />   
                   <Route path="/services" element={<Services />} />
-                  <Route path="/services/" element={<ServiceDetail />} />
                   <Route path="/explore" element={<Explore />} />
-                  <Route path="/stays" element={<Services />} /> 
+                  <Route path="/stays" element={<Stays />} /> 
+                  <Route path="/meals" element={<Meals />} />
+                  <Route path="/transport" element={<Transport />} />
+
                   {/* Authentication Routes */}
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />

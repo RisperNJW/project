@@ -1,14 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  MapPin, 
-  Mail, 
-  Phone, 
-  Facebook, 
-  Twitter, 
-  Instagram, 
+import {
+  MapPin,
+  Mail,
+  Phone,
+  Facebook,
+  Twitter,
+  Instagram,
   Linkedin,
-  Heart
+  Heart,
 } from 'lucide-react';
 
 const Footer: React.FC = () => {
@@ -16,32 +16,35 @@ const Footer: React.FC = () => {
 
   const footerLinks = {
     services: [
-      { label: 'Safari Tours', path: '/services?category=safari' },
-      { label: 'Beach Holidays', path: '/services?category=beach' },
-      { label: 'Mountain Climbing', path: '/services?category=mountain' },
+      { label: 'Safari Adventures', path: '/services?category=safari' },
       { label: 'Cultural Tours', path: '/services?category=cultural' },
-      { label: 'Accommodation', path: '/services?category=accommodation' },
+      { label: 'Beach Escapes', path: '/services?category=beach' },
+      { label: 'City Experiences', path: '/services?category=city' },
     ],
-    company: [
-      { label: 'About Us', path: '/about' },
-      { label: 'Our Team', path: '/team' },
-      { label: 'Careers', path: '/careers' },
-      { label: 'Press', path: '/press' },
-      { label: 'Blog', path: '/blog' },
+    transport: [
+      { label: 'Car Rentals', path: '/services?category=car' },
+      { label: 'Airport Transfers', path: '/services?category=transfer' },
+      { label: 'Tour Vans', path: '/services?category=van' },
+      { label: 'Boda Boda', path: '/services?category=boda' },
     ],
-    support: [
-      { label: 'Help Center', path: '/help' },
-      { label: 'Contact Us', path: '/contact' },
-      { label: 'Safety Guidelines', path: '/safety' },
-      { label: 'Booking Terms', path: '/terms' },
-      { label: 'Cancellation Policy', path: '/cancellation' },
+    meals: [
+      { label: 'Traditional Meals', path: '/services?category=meals' },
+      { label: 'Fine Dining', path: '/services?category=dining' },
+      { label: 'Local Delicacies', path: '/services?category=local' },
+      { label: 'Farm-to-Table', path: '/services?category=farm' },
+    ],
+    stay: [
+      { label: 'Airbnb Stays', path: '/services?category=airbnb' },
+      { label: 'Luxury Hotels', path: '/services?category=hotels' },
+      { label: 'Lodges & Camps', path: '/services?category=lodges' },
+      { label: 'Guest Houses', path: '/services?category=guest' },
     ],
     legal: [
       { label: 'Privacy Policy', path: '/privacy' },
       { label: 'Terms of Service', path: '/terms' },
       { label: 'Cookie Policy', path: '/cookies' },
       { label: 'Accessibility', path: '/accessibility' },
-    ]
+    ],
   };
 
   const socialLinks = [
@@ -54,27 +57,24 @@ const Footer: React.FC = () => {
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-6 py-12">
-        {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
-          {/* Brand Section */}
+        {/* Top Footer */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
+          {/* Brand Info */}
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
                 <MapPin className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold">Go2Bookings </span>
+              <span className="text-xl font-bold">Go2Bookings</span>
             </Link>
-            
             <p className="text-gray-300 mb-6 max-w-md">
-              Discover the magic of Kenya through authentic experiences. From thrilling safaris 
-              to pristine beaches, we connect you with the best of East Africa.
+              Discover the magic of Kenya through authentic experiences—from safaris and culture
+              to unforgettable meals and warm stays.
             </p>
-
-            {/* Contact Info */}
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-emerald-400" />
-                <span className="text-gray-300">info@Go2Bookings.com</span>
+                <span className="text-gray-300">info@go2bookings.com</span>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-emerald-400" />
@@ -87,13 +87,13 @@ const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Services Links */}
+          {/* Service Categories */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Services</h3>
+            <h3 className="text-lg font-semibold mb-4">Explore</h3>
             <ul className="space-y-2">
               {footerLinks.services.map((link) => (
                 <li key={link.path}>
-                  <Link 
+                  <Link
                     to={link.path}
                     className="text-gray-300 hover:text-emerald-400 transition-colors"
                   >
@@ -104,13 +104,12 @@ const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Company Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Company</h3>
+            <h3 className="text-lg font-semibold mb-4">Transport</h3>
             <ul className="space-y-2">
-              {footerLinks.company.map((link) => (
+              {footerLinks.transport.map((link) => (
                 <li key={link.path}>
-                  <Link 
+                  <Link
                     to={link.path}
                     className="text-gray-300 hover:text-emerald-400 transition-colors"
                   >
@@ -121,13 +120,28 @@ const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Support Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Support</h3>
+            <h3 className="text-lg font-semibold mb-4">Meals</h3>
             <ul className="space-y-2">
-              {footerLinks.support.map((link) => (
+              {footerLinks.meals.map((link) => (
                 <li key={link.path}>
-                  <Link 
+                  <Link
+                    to={link.path}
+                    className="text-gray-300 hover:text-emerald-400 transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Stay</h3>
+            <ul className="space-y-2">
+              {footerLinks.stay.map((link) => (
+                <li key={link.path}>
+                  <Link
                     to={link.path}
                     className="text-gray-300 hover:text-emerald-400 transition-colors"
                   >
@@ -139,7 +153,7 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Newsletter Section */}
+        {/* Newsletter */}
         <div className="border-t border-gray-800 mt-12 pt-8">
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div>
@@ -148,7 +162,6 @@ const Footer: React.FC = () => {
                 Get the latest travel tips, exclusive offers, and destination insights.
               </p>
             </div>
-            
             <div className="flex gap-2">
               <input
                 type="email"
@@ -162,17 +175,15 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Bottom Section */}
+        {/* Bottom Bar */}
         <div className="border-t border-gray-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            {/* Copyright */}
             <div className="flex items-center gap-2 text-gray-300">
-              <span>© {currentYear} Go2Bookings Platform. Made with</span>
+              <span>© {currentYear} Go2Bookings. Made with</span>
               <Heart className="w-4 h-4 text-red-500 fill-current" />
               <span>in Kenya</span>
             </div>
 
-            {/* Social Links */}
             <div className="flex items-center gap-4">
               {socialLinks.map((social) => (
                 <a
@@ -188,8 +199,7 @@ const Footer: React.FC = () => {
               ))}
             </div>
 
-            {/* Legal Links */}
-            <div className="flex items-center gap-6">
+            <div className="flex flex-wrap items-center gap-4">
               {footerLinks.legal.map((link) => (
                 <Link
                   key={link.path}
