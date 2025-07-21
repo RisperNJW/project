@@ -2,115 +2,136 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
-import {  useAuth} from '../../contexts/AuthContext';
 
-interface Message {
-  id: string;
-  text: string;
-  sender: 'user' | 'bot';
-  timestamp: Date;
-}
+const API_BASE_URL = 'http://localhost:5000/api/chat';
 
-const ChatBot: React.FC = () => {
+const Message = ({ msg }) => (
+  <div className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+    <div className={`max-w-[80%] p-3 rounded-lg text-sm ${
+      msg.sender === 'user' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-800'
+    }`}>
+      <p>{msg.text}</p>
+      <p className="text-xs opacity-70 mt-1">
+        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      </p>
+    </div>
+  </div>
+);
+
+const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated } = useAuth ();
+  const [sessionId] = useState(`session_${Date.now()}`);
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
 
+  // Initialize chat
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      // Add welcome message
-      const welcomeMessage: Message = {
-        id: '1',
-        text: "Hello! I'm your Go2Bookings Assistant. I can help you with safari bookings, travel information, and answer questions about Kenya's amazing destinations. How can I assist you today?",
-        sender: 'bot',
-        timestamp: new Date(),
-      };
-      setMessages([welcomeMessage]);
-      
-      // Load suggestions
-      loadSuggestions();
+      loadInitialMessages();
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const loadSuggestions = async () => {
+  const loadInitialMessages = async () => {
     try {
-      const response = await axios.get('/api/chat/suggestions');
-      setSuggestions(response.data.suggestions);
+      const response = await axios.get(`${API_BASE_URL}/history/${sessionId}`);
+      if (response.data.history.length > 0) {
+        const formattedMessages = response.data.history
+          .filter(m => m.role !== 'system')
+          .map(m => ({
+            id: Date.now().toString(),
+            text: m.content,
+            sender: m.role === 'user' ? 'user' : 'bot',
+            timestamp: new Date()
+          }));
+        setMessages(formattedMessages);
+      } else {
+        setMessages([{
+          id: '1',
+          text: "Hi there! I'm your Go2Bookings Assistant. How can I help you today?",
+          sender: 'bot',
+          timestamp: new Date(),
+        }]);
+      }
     } catch (error) {
-      console.error('Failed to load suggestions:', error);
+      console.error('Error loading history:', error);
+      setMessages([{
+        id: '1',
+        text: "Hi there! I'm your Go2Bookings Assistant. How can I help you today?",
+        sender: 'bot',
+        timestamp: new Date(),
+      }]);
     }
   };
 
-  const sendMessage = async (text: string) => {
-    if (!text.trim()) return;
+  // Auto-scroll
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
-    const userMessage: Message = {
+  const sendMessage = async (text) => {
+    if (!text.trim() || isLoading) return;
+
+    const userMessage = {
       id: Date.now().toString(),
-      text: text.trim(),
+      text,
       sender: 'user',
       timestamp: new Date(),
     };
-
     setMessages(prev => [...prev, userMessage]);
     setInputText('');
     setIsLoading(true);
 
     try {
-      const response = await axios.post('/api/chat/message', {
-        message: text.trim(),
+      const response = await axios.post(`${API_BASE_URL}/message`, {
+        message: text,
+        sessionId
       });
 
-      const botMessage: Message = {
+      const botMessage = {
         id: (Date.now() + 1).toString(),
         text: response.data.response,
         sender: 'bot',
         timestamp: new Date(),
       };
-
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
-      console.error('Chat error:', error);
-      
-      const errorMessage: Message = {
+      console.error('Error sending message:', error);
+      const errorMessage = error.response?.data?.error || 
+                         "Oops! I can't reach my brain right now. Please try again later.";
+      setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
-        text: "I'm sorry, I'm having trouble connecting right now. Please try again later or contact our support team at +254-700-000-000.",
+        text: errorMessage,
         sender: 'bot',
         timestamp: new Date(),
-      };
-
-      setMessages(prev => [...prev, errorMessage]);
+      }]);
     } finally {
       setIsLoading(false);
+      inputRef.current?.focus();
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    sendMessage(inputText);
-  };
-
-  const handleSuggestionClick = (suggestion: string) => {
-    sendMessage(suggestion);
+  const clearChat = async () => {
+    try {
+      await axios.delete(`${API_BASE_URL}/clear/${sessionId}`);
+      setMessages([{
+        id: '1',
+        text: "Hi there! I'm your Go2Bookings Assistant. How can I help you today?",
+        sender: 'bot',
+        timestamp: new Date(),
+      }]);
+    } catch (error) {
+      console.error('Error clearing chat:', error);
+    }
   };
 
   return (
     <>
-      {/* Chat Button */}
       <motion.button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 z-50 bg-emerald-600 text-white p-4 rounded-full shadow-lg hover:bg-emerald-700 transition-colors ${
+        className={`fixed bottom-6 right-6 z-50 bg-emerald-600 text-white p-4 rounded-full shadow-lg hover:bg-emerald-700 ${
           isOpen ? 'hidden' : 'block'
         }`}
         whileHover={{ scale: 1.1 }}
@@ -119,7 +140,6 @@ const ChatBot: React.FC = () => {
         <MessageCircle size={24} />
       </motion.button>
 
-      {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -128,100 +148,55 @@ const ChatBot: React.FC = () => {
             exit={{ opacity: 0, y: 100, scale: 0.8 }}
             className="fixed bottom-6 right-6 z-50 w-96 h-[500px] bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col"
           >
-            {/* Header */}
             <div className="bg-emerald-600 text-white p-4 rounded-t-lg flex justify-between items-center">
               <div>
                 <h3 className="font-semibold">Go2Bookings Assistant</h3>
-                <p className="text-sm opacity-90">Ask me anything about Go2Bookings!</p>
+                <p className="text-sm opacity-90">Your Kenya travel guide</p>
               </div>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="text-white hover:bg-emerald-700 p-1 rounded"
-              >
-                <X size={20} />
-              </button>
+              <div className="flex gap-2">
+                <button 
+                  onClick={clearChat}
+                  className="text-xs bg-emerald-700 hover:bg-emerald-800 px-2 py-1 rounded"
+                >
+                  Clear
+                </button>
+                <button 
+                  onClick={() => setIsOpen(false)} 
+                  className="hover:bg-emerald-700 p-1 rounded"
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
 
-            {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${
-                    message.sender === 'user' ? 'justify-end' : 'justify-start'
-                  }`}
-                >
-                  <div
-                    className={`max-w-[80%] p-3 rounded-lg ${
-                      message.sender === 'user'
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-                    <p className="text-xs opacity-70 mt-1">
-                      {message.timestamp.toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-
+              {messages.map(msg => <Message key={msg.id} msg={msg} />)}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-gray-100 p-3 rounded-lg">
+                  <div className="bg-gray-100 p-3 rounded-lg flex items-center gap-2">
                     <Loader className="animate-spin" size={16} />
+                    <span className="text-sm">Thinking...</span>
                   </div>
                 </div>
               )}
-
-              {/* Suggestions */}
-              {messages.length === 1 && suggestions.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-600">Quick suggestions:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {suggestions.slice(0, 3).map((suggestion, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleSuggestionClick(suggestion)}
-                        className="text-xs bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full hover:bg-emerald-100 transition-colors"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input */}
             <div className="p-4 border-t border-gray-200">
-              {!isAuthenticated && (
-                <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
-                  <a href="/login" className="text-emerald-600 hover:underline">
-                    Login
-                  </a>{' '}
-                  for personalized assistance and booking help!
-                </div>
-              )}
-              
-              <form onSubmit={handleSubmit} className="flex gap-2">
+              <form onSubmit={(e) => { e.preventDefault(); sendMessage(inputText); }} className="flex gap-2">
                 <input
                   type="text"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   placeholder="Ask about Go2Bookings..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   disabled={isLoading}
+                  ref={inputRef}
                 />
                 <button
                   type="submit"
                   disabled={isLoading || !inputText.trim()}
-                  className="bg-emerald-600 text-white p-2 rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="bg-emerald-600 text-white p-2 rounded-lg hover:bg-emerald-700 disabled:opacity-50"
                 >
                   <Send size={16} />
                 </button>

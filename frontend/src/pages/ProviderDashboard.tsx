@@ -26,7 +26,7 @@ const ProviderDashboard: React.FC = () => {
 
   const sidebarItems = [
     { path: '/provider', label: 'Overview', icon: BarChart3 },
-    { path: '/provider/services', label: 'My Services', icon: MapPin },
+    { path: '/provider/myservices', label: 'My Services', icon: MapPin },
     { path: '/provider/bookings', label: 'Bookings', icon: Calendar },
     { path: '/provider/earnings', label: 'Earnings', icon: CreditCard },
     { path: '/provider/settings', label: 'Settings', icon: Settings },
@@ -37,7 +37,7 @@ const ProviderDashboard: React.FC = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Provider Dashboard</h1>
         <Link
-          to="/provider/services/new"
+          to="/myservices"
           className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2"
         >
           <Plus size={16} />

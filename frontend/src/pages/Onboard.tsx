@@ -12,15 +12,35 @@ export default function Onboard() {
     message: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleChange = (
+    
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submitting form:", form);
-    // Connect to backend or API
-    alert("Thank you! We’ll get back to you shortly.");
+    setIsSubmitting(true);
+
+    const submissions = JSON.parse(localStorage.getItem("providers") || "[]");
+    submissions.push(form);
+    localStorage.setItem("providers", JSON.stringify(submissions));
+
+    alert("✅ Thank you! Your service has been submitted.");
+    
+    // Reset form
+    setForm({
+      name: "",
+      email: "",
+      serviceType: "",
+      region: "",
+      message: "",
+    });
+
+    setIsSubmitting(false);
   };
 
   return (
@@ -36,8 +56,7 @@ export default function Onboard() {
           Join Kenya's Premier Tourism Network
         </motion.h1>
         <p className="max-w-2xl mx-auto text-lg text-gray-700">
-          Are you a service provider in Kenya? Whether you offer stays, meals, transport, or unique local experiences —
-          we welcome you onboard.
+          Are you a service provider in Kenya? Whether you offer stays, meals, transport, or unique local experiences — we welcome you onboard.
         </p>
       </div>
 
@@ -81,7 +100,9 @@ export default function Onboard() {
             >
               <option value="">-- Select Service --</option>
               {serviceTypes.map((type) => (
-                <option key={type}>{type}</option>
+                <option key={type} value={type}>
+                  {type}
+                </option>
               ))}
             </select>
           </div>
@@ -115,9 +136,10 @@ export default function Onboard() {
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             type="submit"
-            className="w-full bg-emerald-600 text-white py-3 rounded-xl shadow-lg hover:bg-emerald-700 transition"
+            disabled={isSubmitting}
+            className="w-full bg-emerald-600 text-white py-3 rounded-xl shadow-lg hover:bg-emerald-700 transition disabled:opacity-50"
           >
-            Submit Your Service
+            {isSubmitting ? "Submitting..." : "Submit Your Service"}
           </motion.button>
         </form>
       </div>

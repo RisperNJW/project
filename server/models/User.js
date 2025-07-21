@@ -1,118 +1,29 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
-
+const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Name is required'],
-    trim: true,
-    maxlength: [50, 'Name cannot exceed 50 characters']
-  },
-  email: {
-    type: String,
-    required: [true, 'Email is required'],
-    unique: true,
-    lowercase: true,
-    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
-  },
-  password: {
-    type: String,
-    required: [true, 'Password is required'],
-    minlength: [6, 'Password must be at least 6 characters'],
-    select: false
-  },
-  phone: {
-    type: String,
-    match: [/^\+254[0-9]{9}$/, 'Please enter a valid Kenyan phone number']
-  },
-  role: {
-    type: String,
-    enum: ['user', 'provider', 'admin'],
-    default: 'user'
-  },
-  avatar: {
-    type: String,
-    default: ''
-  },
-  isVerified: {
-    type: Boolean,
-    default: false
-  },
-  verificationToken: String,
-  resetPasswordToken: String,
-  resetPasswordExpire: Date,
-  preferences: {
-    currency: {
-      type: String,
-      enum: ['USD', 'KES', 'EUR', 'GBP'],
-      default: 'USD'
-    },
-    language: {
-      type: String,
-      enum: ['en', 'sw'],
-      default: 'en'
-    },
-    notifications: {
-      email: { type: Boolean, default: true },
-      sms: { type: Boolean, default: false },
-      push: { type: Boolean, default: true }
-    }
-  },
-  profile: {
-    dateOfBirth: Date,
-    nationality: String,
-    interests: [String],
-    travelStyle: {
-      type: String,
-      enum: ['budget', 'mid-range', 'luxury', 'adventure', 'cultural']
-    }
-  },
-  bookingHistory: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Booking'
-  }],
-  favoriteServices: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Service'
-  }],
-  loyaltyPoints: {
-    type: Number,
-    default: 0
-  },
-  lastLogin: Date,
-  isActive: {
-    type: Boolean,
-    default: true
-  }
-}, {
-  timestamps: true
-});
+    name: String,
+    email: { type: String, unique: true },
+    password: String,
+}, { timestamps: true });
+module.exports = mongoose.model("User", userSchema);
 
-// Hash password before saving
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  
-  const salt = await bcrypt.genSalt(12);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
+// server/controllers/authController.js
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const User = require("../models/user");
 
-// Compare password method
-userSchema.methods.comparePassword = async function(candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+exports.register = async (req, res) => {
+    const { name, email, password } = req.body;
+    const hashed = await bcrypt.hash(password, 10);
+    const user = await User.create({ name, email, password: hashed });
+    res.status(201).json({ user });
 };
 
-// Generate JWT token
-userSchema.methods.generateAuthToken = function() {
-  return jwt.sign(
-    { 
-      id: this._id, 
-      email: this.email, 
-      role: this.role 
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRE || '2d' }
-  );
+exports.login = async (req, res) => {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+        return res.status(400).json({ error: "Invalid credentials" });
+    }
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+    res.json({ token });
 };
-
-export default mongoose.model('User', userSchema);

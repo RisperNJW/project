@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Search } from 'lucide-react';
+import { Menu, X, Search,MapPin } from 'lucide-react';
 
 const navLinks = [
   { name: 'Home', path: '/' },
@@ -32,9 +32,12 @@ const Navbar: React.FC = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 flex justify-between items-center h-16">
         {/* Logo */}
-        <Link to="/" className="text-2xl font-bold text-emerald-700 tracking-tight">
-          Go2Bookings<span className="text-emerald-400">.KE</span>
-        </Link>
+            <Link to="/" className="flex font-bold gap-2 items-center text-gray-700">
+              <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
+                <MapPin className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xl font-bold">Go2Bookings</span>
+            </Link>
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center space-x-8 text-[15px]">
