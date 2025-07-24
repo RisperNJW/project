@@ -1,20 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Search,MapPin } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, Search, MapPin, ShoppingCart, User, LogOut, Settings } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { useCart } from '../../contexts/CartContext';
 
 const navLinks = [
-  { name: 'Home', path: '/' },
-  { name: 'Explore', path: '/explore' },
-  { name: 'Services', path: '/services' },
-  { name: 'Stays', path: '/stays' },
-  { name: 'Meals', path: '/meals' },
-  { name: 'Transport', path: '/transport' },
+  { name: 'Home', path: '/', description: 'Discover Kenya' },
+  { name: 'Explore', path: '/explore', description: 'Plan Your Journey' },
+  { name: 'Services', path: '/services', description: 'All Services' },
+  { name: 'Stays', path: '/stays', description: 'Accommodations' },
+  { name: 'Meals', path: '/meals', description: 'Local Cuisine' },
+  { name: 'Transport', path: '/transport', description: 'Get Around' },
 ];
 
 const Navbar: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const { totalItems } = useCart();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -22,7 +28,15 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => setMenuOpen(false), [location.pathname]);
+  useEffect(() => {
+    setMenuOpen(false);
+    setUserMenuOpen(false);
+  }, [location.pathname]);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
     <header
@@ -40,35 +54,110 @@ const Navbar: React.FC = () => {
             </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center space-x-8 text-[15px]">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              to={link.path}
-              className="text-gray-800 hover:text-emerald-600 transition font-medium"
-            >
-              {link.name}
-            </Link>
-          ))}
+        <nav className="hidden md:flex items-center space-x-6">
+          {navLinks.map((link) => {
+            const isActive = location.pathname === link.path;
+            return (
+              <div key={link.name} className="relative group">
+                <Link
+                  to={link.path}
+                  className={`text-sm font-medium transition-colors duration-200 ${
+                    isActive 
+                      ? 'text-emerald-600' 
+                      : 'text-gray-700 hover:text-emerald-600'
+                  }`}
+                >
+                  {link.name}
+                </Link>
+                {/* Tooltip with description */}
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
+                  {link.description}
+                </div>
+              </div>
+            );
+          })}
         </nav>
 
         {/* Right Side (Desktop) */}
-        <div className="hidden md:flex items-center gap-5">
-          <Link to="/search" className="text-gray-600 hover:text-emerald-600">
+        <div className="hidden md:flex items-center gap-4">
+          <Link 
+            to="/search" 
+            className="text-gray-600 hover:text-emerald-600 transition-colors p-2 rounded-lg hover:bg-emerald-50"
+            title="Search services"
+          >
             <Search size={20} />
           </Link>
-          <Link
-            to="/login"
-            className="text-gray-600 hover:text-emerald-700 transition text-sm"
-          >
-            Login
-          </Link>
-          <Link
-            to="/register"
-            className="bg-emerald-600 text-white px-4 py-1.5 text-sm rounded-full hover:bg-emerald-700 transition"
-          >
-            Sign up
-          </Link>
+          
+          {user ? (
+            <>
+              {/* Cart Icon */}
+              <Link 
+                to="/cart" 
+                className="relative text-gray-600 hover:text-emerald-600 transition-colors p-2 rounded-lg hover:bg-emerald-50"
+                title="View cart"
+              >
+                <ShoppingCart size={20} />
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-emerald-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                    {totalItems}
+                  </span>
+                )}
+              </Link>
+              
+              {/* User Menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center space-x-2 text-gray-700 hover:text-emerald-600 transition-colors p-2 rounded-lg hover:bg-emerald-50"
+                >
+                  <User size={20} />
+                  <span className="text-sm font-medium">{user.name}</span>
+                </button>
+                
+                {userMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <Link
+                      to="/dashboard"
+                      className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600"
+                    >
+                      <User size={16} />
+                      <span>Dashboard</span>
+                    </Link>
+                    <Link
+                      to="/profile"
+                      className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600"
+                    >
+                      <Settings size={16} />
+                      <span>Profile</span>
+                    </Link>
+                    <hr className="my-2" />
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                    >
+                      <LogOut size={16} />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="text-gray-600 hover:text-emerald-700 transition text-sm font-medium px-3 py-2 rounded-lg hover:bg-emerald-50"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                className="bg-emerald-600 text-white px-4 py-2 text-sm font-medium rounded-lg hover:bg-emerald-700 transition shadow-sm"
+              >
+                Get Started
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Nav Toggle */}

@@ -21,26 +21,44 @@ export default function Onboard() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const submissions = JSON.parse(localStorage.getItem("providers") || "[]");
-    submissions.push(form);
-    localStorage.setItem("providers", JSON.stringify(submissions));
+    try {
+      const response = await fetch('/api/providers/onboard', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...form,
+          status: 'pending',
+          submittedAt: new Date().toISOString()
+        })
+      });
 
-    alert("✅ Thank you! Your service has been submitted.");
-    
-    // Reset form
-    setForm({
-      name: "",
-      email: "",
-      serviceType: "",
-      region: "",
-      message: "",
-    });
+      const data = await response.json();
 
-    setIsSubmitting(false);
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit application');
+      }
+
+      alert("✅ Thank you! Your provider application has been submitted successfully. We'll review it and get back to you within 2-3 business days.");
+      
+      // Reset form
+      setForm({
+        name: "",
+        email: "",
+        serviceType: "",
+        region: "",
+        message: "",
+      });
+    } catch (error) {
+      alert(`❌ Error: ${(error as Error).message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

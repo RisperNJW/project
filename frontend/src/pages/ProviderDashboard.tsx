@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -10,19 +10,117 @@ import {
   Plus,
   TrendingUp,
   Users,
-  Star
+  Star,
+  CheckCircle,
+  Clock,
+  XCircle
 } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+interface Booking {
+  _id: string;
+  bookingNumber: string;
+  userId: { name: string; email: string };
+  items: Array<{
+    serviceName: string;
+    category: string;
+    price: number;
+    quantity: number;
+    guests: number;
+    startDate: string;
+    endDate: string;
+  }>;
+  contactInfo: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  totalAmount: number;
+  status: string;
+  paymentStatus: string;
+  createdAt: string;
+}
 
 const ProviderDashboard: React.FC = () => {
   const location = useLocation();
-  const [stats] = useState({
-    totalServices: 5,
-    totalBookings: 23,
-    totalRevenue: 8450,
+  const [stats, setStats] = useState({
+    totalServices: 0,
+    totalBookings: 0,
+    totalRevenue: 0,
     averageRating: 4.8,
-    pendingBookings: 3,
-    completedBookings: 20
+    pendingBookings: 0,
+    completedBookings: 0
   });
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProviderData();
+  }, []);
+
+  const fetchProviderData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch provider bookings
+      const bookingsResponse = await fetch('/api/bookings/admin/all', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (bookingsResponse.ok) {
+        const bookingsData = await bookingsResponse.json();
+        setBookings(bookingsData);
+        
+        // Calculate stats from real data
+        const totalRevenue = bookingsData.reduce((sum: number, booking: Booking) => 
+          sum + booking.totalAmount, 0
+        );
+        const pendingBookings = bookingsData.filter((b: Booking) => 
+          b.status === 'pending'
+        ).length;
+        const completedBookings = bookingsData.filter((b: Booking) => 
+          b.status === 'completed'
+        ).length;
+        
+        setStats(prev => ({
+          ...prev,
+          totalBookings: bookingsData.length,
+          totalRevenue,
+          pendingBookings,
+          completedBookings
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch provider data:', error);
+      toast.error('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateBookingStatus = async (bookingId: string, status: string) => {
+    try {
+      const response = await fetch(`/api/bookings/${bookingId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ status })
+      });
+      
+      if (response.ok) {
+        toast.success('Booking status updated successfully');
+        fetchProviderData(); // Refresh data
+      } else {
+        throw new Error('Failed to update booking status');
+      }
+    } catch (error) {
+      toast.error('Failed to update booking status');
+    }
+  };
 
   const sidebarItems = [
     { path: '/provider', label: 'Overview', icon: BarChart3 },

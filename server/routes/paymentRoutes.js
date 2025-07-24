@@ -1,7 +1,17 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const { processPayment } = require("../controllers/payment");
+const paymentController = require('../controllers/payment');
+const auth = require('../middleware/auth');
 
-router.post("/", processPayment);
+// Stripe payment routes
+router.post('/stripe/create-intent', auth, paymentController.createStripePaymentIntent);
+router.post('/stripe/confirm', auth, paymentController.confirmStripePayment);
+
+// M-Pesa payment routes
+router.post('/mpesa/initiate', auth, paymentController.initiateMpesaPayment);
+router.post('/mpesa/callback', paymentController.mpesaCallback); // No auth for callback
+
+// General payment routes
+router.get('/status/:paymentId', auth, paymentController.checkPaymentStatus);
 
 module.exports = router;

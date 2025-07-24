@@ -1,9 +1,54 @@
 const mongoose = require("mongoose");
+
 const userSchema = new mongoose.Schema({
-    name: String,
-    email: { type: String, unique: true },
-    password: String,
+    name: { type: String, required: true },
+    email: { type: String, unique: true, required: true },
+    password: { type: String, required: true },
+    phone: String,
+    role: { type: String, enum: ['user', 'provider', 'admin'], default: 'user' },
+    profile: {
+        avatar: String,
+        bio: String,
+        location: String,
+        dateOfBirth: Date
+    },
+    // Provider-specific fields
+    providerInfo: {
+        businessName: String,
+        businessType: String,
+        licenseNumber: String,
+        description: String,
+        website: String,
+        socialMedia: {
+            facebook: String,
+            instagram: String,
+            twitter: String
+        },
+        bankDetails: {
+            accountName: String,
+            accountNumber: String,
+            bankName: String,
+            swiftCode: String
+        },
+        isVerified: { type: Boolean, default: false },
+        rating: { type: Number, default: 0 },
+        reviewCount: { type: Number, default: 0 }
+    },
+    preferences: {
+        currency: { type: String, default: 'KES' },
+        language: { type: String, default: 'en' },
+        notifications: {
+            email: { type: Boolean, default: true },
+            sms: { type: Boolean, default: false },
+            push: { type: Boolean, default: true }
+        }
+    },
+    isActive: { type: Boolean, default: true },
+    lastLogin: Date,
+    emailVerified: { type: Boolean, default: false },
+    phoneVerified: { type: Boolean, default: false }
 }, { timestamps: true });
+
 module.exports = mongoose.model("User", userSchema);
 
 // server/controllers/authController.js

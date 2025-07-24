@@ -1,11 +1,49 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api/chat';
+// Simulated chatbot responses for better user experience
+const CHATBOT_RESPONSES = {
+  greetings: [
+    "Hello! I'm your Kenya tourism assistant. How can I help you plan your adventure?",
+    "Hi there! Ready to explore Kenya? I can help you find safaris, beaches, cultural tours, and more!",
+    "Welcome! I'm here to help you discover the best of Kenya. What are you interested in?"
+  ],
+  safari: [
+    "Kenya offers amazing safari experiences! The Maasai Mara is famous for the Great Migration. Would you like to know about safari packages or specific parks?",
+    "For safaris, I recommend Maasai Mara, Amboseli, or Tsavo. Each offers unique wildlife experiences. What type of animals are you most excited to see?"
+  ],
+  beaches: [
+    "Kenya's coast is stunning! Diani Beach, Watamu, and Malindi offer pristine beaches, water sports, and cultural experiences. Are you interested in relaxation or adventure activities?",
+    "The Kenyan coast has beautiful beaches and rich Swahili culture. You can enjoy dhow cruises, snorkeling, and fresh seafood. What beach activities interest you most?"
+  ],
+  culture: [
+    "Kenya has incredible cultural diversity! You can visit Maasai villages, explore Lamu's Swahili heritage, or experience traditional markets. What cultural aspects interest you?",
+    "Cultural tours in Kenya include traditional dances, craft workshops, and community visits. The Maasai, Kikuyu, and Luo communities offer authentic experiences."
+  ],
+  food: [
+    "Kenyan cuisine is delicious! Try nyama choma (grilled meat), ugali, sukuma wiki, and coastal dishes like biryani. Would you like restaurant recommendations?",
+    "Food experiences include traditional cooking classes, local markets, and authentic restaurants. Coastal cuisine has Indian and Arabic influences. What type of food interests you?"
+  ],
+  transport: [
+    "Getting around Kenya is easy! We offer airport transfers, safari vehicles, car rentals, and local transport. Where are you planning to travel?",
+    "Transport options include private cars, matatus (local buses), and domestic flights. For safaris, 4WD vehicles are recommended. Need help with bookings?"
+  ],
+  default: [
+    "That's interesting! I can help you with safaris, beaches, cultural tours, accommodation, food, and transport in Kenya. What would you like to explore?",
+    "I'm here to help with your Kenya travel plans! You can ask about wildlife, beaches, culture, food, or any other travel needs.",
+    "Let me help you discover Kenya! I can provide information about safaris, coastal experiences, cultural tours, and practical travel tips."
+  ]
+};
 
-const Message = ({ msg }) => (
+interface Message {
+  id: string;
+  text: string;
+  sender: 'user' | 'bot';
+  timestamp: Date;
+}
+
+const MessageComponent = ({ msg }: { msg: Message }) => (
   <div className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
     <div className={`max-w-[80%] p-3 rounded-lg text-sm ${
       msg.sender === 'user' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-800'
@@ -20,61 +58,63 @@ const Message = ({ msg }) => (
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId] = useState(`session_${Date.now()}`);
-  const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize chat
+  // Initialize chat with welcome message
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       loadInitialMessages();
     }
-  }, [isOpen]);
+  }, [isOpen, messages.length]);
 
-  const loadInitialMessages = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/history/${sessionId}`);
-      if (response.data.history.length > 0) {
-        const formattedMessages = response.data.history
-          .filter(m => m.role !== 'system')
-          .map(m => ({
-            id: Date.now().toString(),
-            text: m.content,
-            sender: m.role === 'user' ? 'user' : 'bot',
-            timestamp: new Date()
-          }));
-        setMessages(formattedMessages);
-      } else {
-        setMessages([{
-          id: '1',
-          text: "Hi there! I'm your Go2Bookings Assistant. How can I help you today?",
-          sender: 'bot',
-          timestamp: new Date(),
-        }]);
-      }
-    } catch (error) {
-      console.error('Error loading history:', error);
-      setMessages([{
-        id: '1',
-        text: "Hi there! I'm your Go2Bookings Assistant. How can I help you today?",
-        sender: 'bot',
-        timestamp: new Date(),
-      }]);
-    }
+  const loadInitialMessages = () => {
+    const welcomeMessage: Message = {
+      id: Date.now().toString(),
+      text: CHATBOT_RESPONSES.greetings[0],
+      sender: 'bot',
+      timestamp: new Date()
+    };
+    setMessages([welcomeMessage]);
   };
 
-  // Auto-scroll
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  const getRandomResponse = (category: keyof typeof CHATBOT_RESPONSES) => {
+    const responses = CHATBOT_RESPONSES[category] || CHATBOT_RESPONSES.default;
+    return responses[Math.floor(Math.random() * responses.length)];
+  };
 
-  const sendMessage = async (text) => {
+  const categorizeMessage = (text: string): keyof typeof CHATBOT_RESPONSES => {
+    const lowerText = text.toLowerCase();
+    if (lowerText.includes('safari') || lowerText.includes('wildlife') || lowerText.includes('animal')) {
+      return 'safari';
+    } else if (lowerText.includes('beach') || lowerText.includes('coast') || lowerText.includes('ocean')) {
+      return 'beaches';
+    } else if (lowerText.includes('culture') || lowerText.includes('tradition') || lowerText.includes('heritage')) {
+      return 'culture';
+    } else if (lowerText.includes('food') || lowerText.includes('meal') || lowerText.includes('restaurant')) {
+      return 'food';
+    } else if (lowerText.includes('transport') || lowerText.includes('car') || lowerText.includes('travel')) {
+      return 'transport';
+    } else if (lowerText.includes('hello') || lowerText.includes('hi') || lowerText.includes('hey')) {
+      return 'greetings';
+    }
+    return 'default';
+  };
+
+  const simulateTyping = async () => {
+    setIsLoading(true);
+    // Simulate typing delay
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+    setIsLoading(false);
+  };
+
+  const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
 
-    const userMessage = {
+    const userMessage: Message = {
       id: Date.now().toString(),
       text,
       sender: 'user',
@@ -87,12 +127,12 @@ const ChatBot = () => {
     try {
       const response = await axios.post(`${API_BASE_URL}/message`, {
         message: text,
-        sessionId
+        sessionId: `session_${Date.now()}`,
       });
 
-      const botMessage = {
+      const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: response.data.response,
+        text: getRandomResponse(categorizeMessage(text)),
         sender: 'bot',
         timestamp: new Date(),
       };
